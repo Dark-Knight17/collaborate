@@ -11,7 +11,7 @@ interface TaskBoardProps {
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, onSelectTask, onRefresh }) => {
   const handleClaim = async (taskId: string) => {
     try {
-      await api.claimTask(taskId, 'LocalUser');
+      await api.claimTask(taskId);
       onRefresh?.();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to claim task');

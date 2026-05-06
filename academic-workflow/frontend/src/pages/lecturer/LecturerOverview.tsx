@@ -17,7 +17,7 @@ const StatCard: React.FC<{
       width: '52px', height: '52px', borderRadius: '14px',
       background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
     }}>
-      {React.cloneElement(icon as React.ReactElement, { size: 22, color })}
+      {React.cloneElement(icon as React.ReactElement<{ size?: number; color?: string }>, { size: 22, color })}
     </div>
     <div>
       <div style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1, color: 'var(--text-primary)' }}>{value}</div>
