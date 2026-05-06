@@ -1,0 +1,8 @@
+{
+  "python.analysis.extraPaths": [
+    "/Users/curacel/Desktop/My Project/academic-workflow/backend"
+  ],
+  "python.defaultInterpreterPath": "/Users/curacel/Desktop/My Project/academic-workflow/backend/venv/bin/python",
+  "python.analysis.venvPath": "/Users/curacel/Desktop/My Project/academic-workflow/backend",
+  "python.venvPath": "/Users/curacel/Desktop/My Project/academic-workflow/backend"
+}
