@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckSquare, Clock, Users, Sparkles, ChevronDown, ArrowRight, BookOpen, Shield, Zap } from 'lucide-react';
+import { Clock, Users, ArrowRight, BookOpen, Zap } from 'lucide-react';
 
-type Role = 'student' | 'lecturer';
+
 
 export const Homepage: React.FC = () => {
   const navigate = useNavigate();

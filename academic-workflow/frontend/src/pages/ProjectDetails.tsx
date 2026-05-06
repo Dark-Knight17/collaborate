@@ -6,7 +6,7 @@ import { KanbanBoard } from '../components/shared/KanbanBoard';
 import {
   ArrowLeft, Edit3, UploadCloud, Users, Calendar, Sparkles, AlertCircle,
   CheckCircle2, FileText, Activity, ShieldCheck, Zap, Info, Search, Filter,
-  LayoutGrid, List as ListIcon, CalendarDays, Clock, ChevronLeft, ChevronRight, Share2, Copy, Mail, MessageCircle, Send, X, MoreVertical, Trash2
+  LayoutGrid, List as ListIcon, CalendarDays, Clock, ChevronLeft, ChevronRight, Share2, Copy, Mail, MessageCircle, Send, X, MoreVertical, Trash2, Check
 } from 'lucide-react';
 import { api } from '../api';
 import TaskDetails from '../components/TaskDetails';
