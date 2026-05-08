@@ -106,6 +106,13 @@ class AnnouncementFileResponse(BaseModel):
     file_size: int
     uploaded_at: str
 
+class ForgotPasswordReq(BaseModel):
+    email: str
+
+class ResetPasswordReq(BaseModel):
+    token: str
+    new_password: str
+
 # --- Authentication Endpoints ---
 @app.post("/api/register", response_model=UserResponse)
 def register(user: UserCreate, db: Session = Depends(get_db)):
@@ -159,6 +166,67 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             "role": user.role
         }
     }
+
+@app.post("/api/forgot-password")
+def forgot_password(req: ForgotPasswordReq, db: Session = Depends(get_db)):
+    import uuid as _uuid
+    user = db.query(models.User).filter(models.User.email == req.email).first()
+    if not user:
+        # Return success anyway to prevent email enumeration
+        return {"message": "If that email exists, a reset token has been generated.", "reset_token": None, "found": False}
+
+    # Invalidate any existing tokens for this user
+    db.query(models.PasswordResetToken).filter(models.PasswordResetToken.user_id == user.id).delete()
+    db.commit()
+
+    # Generate a new 32-char hex token
+    raw_token = _uuid.uuid4().hex + _uuid.uuid4().hex[:8]  # 40-char hex
+    expires_at = (datetime.utcnow() + timedelta(minutes=30)).isoformat() + "Z"
+
+    reset_record = models.PasswordResetToken(
+        user_id=user.id,
+        token=raw_token,
+        expires_at=expires_at
+    )
+    db.add(reset_record)
+    db.commit()
+
+    return {
+        "message": "Reset token generated. Copy this token and use it to reset your password.",
+        "reset_token": raw_token,
+        "expires_in_minutes": 30,
+        "found": True
+    }
+
+@app.post("/api/reset-password")
+def reset_password(req: ResetPasswordReq, db: Session = Depends(get_db)):
+    record = db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.token == req.token
+    ).first()
+
+    if not record:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
+
+    # Check expiry
+    expiry = datetime.fromisoformat(record.expires_at.replace("Z", ""))
+    if datetime.utcnow() > expiry:
+        db.delete(record)
+        db.commit()
+        raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
+
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+
+    # Update the user's password
+    user = db.query(models.User).filter(models.User.id == record.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    user.hashed_password = auth.get_password_hash(req.new_password)
+    db.delete(record)  # Consume the token (one-time use)
+    db.commit()
+
+    return {"success": True, "message": "Password has been reset successfully. Please sign in."}
 
 @app.get("/api/me")
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):

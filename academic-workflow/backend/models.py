@@ -186,3 +186,10 @@ class ProjectActivity(Base):
     timestamp = Column(String, default="")
 
     project = relationship("Project", back_populates="activity")
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    id = Column(String, primary_key=True, default=gen_id)
+    user_id = Column(String, ForeignKey("users.id"))
+    token = Column(String, unique=True, index=True)
+    expires_at = Column(String)  # ISO timestamp string

@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = `http://${window.location.hostname}:8000/api`;
+// Production (Vercel): set VITE_API_URL in the Vercel dashboard to your Railway/Render backend URL.
+// e.g. https://collaborate-backend.railway.app/api
+// Development: falls back to localhost:8000 automatically.
+const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000/api`;
+
 
 // Add JWT Token to all outbound requests
 axios.interceptors.request.use((config) => {
@@ -26,6 +30,16 @@ export const api = {
   register: async (data: any) => {
     const res = await axios.post(`${API_BASE_URL}/register`, data);
     return res.data;
+  },
+
+  forgotPassword: async (email: string) => {
+    const res = await axios.post(`${API_BASE_URL}/forgot-password`, { email });
+    return res.data as { message: string; reset_token: string | null; found: boolean };
+  },
+
+  resetPassword: async (token: string, new_password: string) => {
+    const res = await axios.post(`${API_BASE_URL}/reset-password`, { token, new_password });
+    return res.data as { success: boolean; message: string };
   },
 
   getMe: async () => {

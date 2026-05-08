@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 python-multipart
 httpx
@@ -10,3 +10,4 @@ google-genai
 python-dotenv
 pypdf
 python-docx
+psycopg2-binary
