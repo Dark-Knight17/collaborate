@@ -26,11 +26,7 @@ app = FastAPI(title="Academic Workflow API - DB Backed")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://collaborate-orpin.vercel.app",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,8 +62,10 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    progress: Optional[int] = None
-    ai_tracking_enabled: Optional[bool] = None
+    courseCode: Optional[str] = None
+    dueDate: Optional[str] = None
+    aiTrackingEnabled: Optional[bool] = None
+    minGrade: Optional[int] = None
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
@@ -77,46 +75,45 @@ class TaskUpdate(BaseModel):
     deadline: Optional[str] = None
     assignees: Optional[List[str]] = None
 
-class NotificationResponse(BaseModel):
-    id: str
-    type: str
-    title: str
+class DescriptionReq(BaseModel):
     description: str
-    timestamp: str
-    isRead: bool
-    link: str
-    projectId: Optional[str] = None
-    taskId: Optional[str] = None
 
-class ProjectFileResponse(BaseModel):
-    id: str
-    filename: str
-    original_name: str
-    file_type: str
-    file_size: int
-    uploaded_by: str
-    uploaded_at: str
+class TaskGenerateReq(BaseModel):
+    topic: str
+    context: Optional[str] = ""
 
-class ProjectActivityResponse(BaseModel):
-    id: str
-    actor: str
-    action: str
-    target: str
-    type: str
-    timestamp: str
-
+# --- Course Schemas ---
 class CourseCreate(BaseModel):
     title: str
     course_code: str
     description: Optional[str] = ""
 
-class CourseResponse(BaseModel):
-    id: str
+class CourseGroupCreate(BaseModel):
+    group_number: int
+    member_names: List[str]
+
+class AnnouncementCreate(BaseModel):
     title: str
-    course_code: str
-    description: str
-    lecturer_id: str
-    join_code: str
+    body: str
+    has_group_assignment: Optional[bool] = False
+    groups: Optional[List[dict]] = []  # [{group_number, member_names}]
+
+class AnnouncementFileResponse(BaseModel):
+    id: str
+    filename: str
+    original_name: str
+    file_type: str
+    file_size: int
+    uploaded_at: str
+
+class ForgotPasswordReq(BaseModel):
+    email: str
+
+class ResetPasswordReq(BaseModel):
+    token: str
+    new_password: str
+
+# --- Authentication Endpoints ---
 @app.post("/api/register", response_model=UserResponse)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
