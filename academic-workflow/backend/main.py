@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
-from typing import List, Optional
-from datetime import timedelta, datetime
+from typing import List, Optional, cast, Any
+from datetime import timedelta, datetime, timezone
 import asyncio
 import random
 import json
@@ -181,7 +181,7 @@ def forgot_password(req: ForgotPasswordReq, db: Session = Depends(get_db)):
 
     # Generate a new 32-char hex token
     raw_token = _uuid.uuid4().hex + _uuid.uuid4().hex[:8]  # 40-char hex
-    expires_at = (datetime.utcnow() + timedelta(minutes=30)).isoformat() + "Z"
+    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat() + "Z"
 
     reset_record = models.PasswordResetToken(
         user_id=user.id,
@@ -209,7 +209,7 @@ def reset_password(req: ResetPasswordReq, db: Session = Depends(get_db)):
 
     # Check expiry
     expiry = datetime.fromisoformat(record.expires_at.replace("Z", ""))
-    if datetime.utcnow() > expiry:
+    if datetime.now(timezone.utc) > expiry:
         db.delete(record)
         db.commit()
         raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
@@ -256,7 +256,8 @@ async def upload_avatar(file: UploadFile = File(...), current_user: models.User 
         os.makedirs(avatar_dir)
     
     # Generate unique filename
-    ext = file.filename.split(".")[-1]
+    _fname = file.filename or "avatar.png"
+    ext = _fname.split(".")[-1] if "." in _fname else "png"
     filename = f"{current_user.id}_{int(time.time())}.{ext}"
     filepath = os.path.join(avatar_dir, filename)
     
@@ -265,7 +266,7 @@ async def upload_avatar(file: UploadFile = File(...), current_user: models.User 
     
     # Update user avatar URL
     # Assuming static files are served at /uploads
-    current_user.avatar_url = f"http://localhost:8000/uploads/avatars/{filename}"
+    current_user.avatar_url = cast(Any, f"http://localhost:8000/uploads/avatars/{filename}")
     db.commit()
     db.refresh(current_user)
     
@@ -297,7 +298,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 # --- Notifications Helper ---
-def create_notification_for_others(project: models.Project, exclude_user: models.User, title: str, description: str, n_type: str, db: Session, task_id: str = None):
+def create_notification_for_others(project: models.Project, exclude_user: models.User, title: str, description: str, n_type: str, db: Session, task_id: Optional[str] = None):
     for member in project.members:
         if member.id != exclude_user.id:
             notif = models.Notification(
@@ -305,7 +306,7 @@ def create_notification_for_others(project: models.Project, exclude_user: models
                 title=title,
                 description=description,
                 type=n_type,
-                timestamp=datetime.utcnow().isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat() + "Z",
                 project_id=project.id,
                 task_id=task_id
             )
@@ -330,10 +331,10 @@ def recalculate_project_progress(project_id: str, db: Session):
     if not proj:
         return
     if not proj.tasks:
-        proj.progress = 0
+        proj.progress = cast(Any, 0)
         db.commit()
         return
-    total = len(proj.tasks)
+    total = len(cast(list, proj.tasks))
     score = 0
     for t in proj.tasks:
         if t.status == 'in_progress':
@@ -342,7 +343,7 @@ def recalculate_project_progress(project_id: str, db: Session):
             score += 66
         elif t.status == 'completed':
             score += 100
-    proj.progress = int(score / total)
+    proj.progress = cast(Any, int(score / total))
     db.commit()
 
 # ============================================================
@@ -366,7 +367,7 @@ def _serialize_course(c: models.Course):
         "lecturerId": c.lecturer_id,
         "lecturerName": c.lecturer.name if c.lecturer else "",
         "joinCode": c.join_code,
-        "studentCount": len(c.students),
+        "studentCount": len(cast(list, c.students)),
         "students": [{"id": s.id, "name": s.name, "email": s.email} for s in c.students],
         "groupCount": total_groups,
     }
@@ -436,9 +437,9 @@ def update_course(course_id: str, req: CourseCreate, current_user: models.User =
     course = db.query(models.Course).filter(models.Course.id == course_id, models.Course.lecturer_id == current_user.id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    course.title = req.title
-    course.course_code = req.course_code
-    course.description = req.description
+    course.title = cast(Any, req.title)
+    course.course_code = cast(Any, req.course_code)
+    course.description = cast(Any, req.description)
     db.commit()
     return {"course": _serialize_course(course)}
 
@@ -483,7 +484,7 @@ def create_course_group(course_id: str, req: CourseGroupCreate, current_user: mo
             "id": group.id,
             "courseId": group.course_id,
             "groupNumber": group.group_number,
-            "memberNames": json.loads(group.member_names),
+            "memberNames": json.loads(cast(str, group.member_names)),
             "createdBy": group.created_by
         }
     }
@@ -504,7 +505,7 @@ def get_course_groups(course_id: str, current_user: models.User = Depends(auth.g
                 "id": g.id,
                 "courseId": g.course_id,
                 "groupNumber": g.group_number,
-                "memberNames": set(json.loads(g.member_names)) if g.member_names else set(),
+                "memberNames": set(json.loads(cast(str, g.member_names))) if g.member_names else set(),
                 "createdBy": g.created_by
             }
             
@@ -527,7 +528,7 @@ def get_course_groups(course_id: str, current_user: models.User = Depends(auth.g
             group_map[p.group_number]["projectId"] = p.id
             group_map[p.group_number]["progress"] = p.progress
             group_map[p.group_number]["dueDate"] = p.due_date
-            group_map[p.group_number]["memberCount"] = len(p.members)
+            group_map[p.group_number]["memberCount"] = len(cast(list, p.members))
                 
     out_groups = []
     for g_num in sorted(group_map.keys()):
@@ -587,7 +588,7 @@ def _serialize_announcement(a: models.Announcement, db: Session):
     if a.has_group_assignment:
         for g in sorted(db_groups, key=lambda x: x.group_number or 0):
             proj = project_by_group.get(g.group_number)
-            member_names = json.loads(g.member_names) if g.member_names else []
+            member_names = json.loads(cast(str, g.member_names)) if g.member_names else []
             groups_data.append({
                 "id": g.id,
                 "groupNumber": g.group_number,
@@ -622,7 +623,7 @@ def join_course_group(course_id: str, group_id: str, current_user: models.User =
     # Check if user is already in ANY group in this course
     all_course_groups = db.query(models.CourseGroup).filter(models.CourseGroup.course_id == course_id).all()
     for g in all_course_groups:
-        members = json.loads(g.member_names) if g.member_names else []
+        members = json.loads(cast(str, g.member_names)) if g.member_names else []
         if current_user.name in members:
             raise HTTPException(status_code=400, detail="You are already a member of another group in this course")
 
@@ -633,10 +634,10 @@ def join_course_group(course_id: str, group_id: str, current_user: models.User =
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
-    member_names = json.loads(group.member_names) if group.member_names else []
+    member_names = json.loads(cast(str, group.member_names)) if group.member_names else []
     if current_user.name not in member_names:
         member_names.append(current_user.name)
-        group.member_names = json.dumps(member_names)
+        group.member_names = cast(Any, json.dumps(member_names))
         db.commit()
         db.refresh(group)
     return {
@@ -644,7 +645,7 @@ def join_course_group(course_id: str, group_id: str, current_user: models.User =
             "id": group.id,
             "courseId": group.course_id,
             "groupNumber": group.group_number,
-            "memberNames": json.loads(group.member_names),
+            "memberNames": json.loads(cast(str, group.member_names)),
         }
     }
 
@@ -683,7 +684,7 @@ def create_announcement(course_id: str, req: AnnouncementCreate, current_user: m
             ).first()
             if existing:
                 # Update members instead of failing
-                existing.member_names = json.dumps(g_members)
+                existing.member_names = cast(Any, json.dumps(g_members))
                 db.commit()
             else:
                 group = models.CourseGroup(
@@ -726,7 +727,8 @@ async def upload_announcement_file(
     if not os.path.exists(upload_dir):
         os.makedirs(upload_dir)
         
-    ext = file.filename.split(".")[-1] if "." in file.filename else ""
+    _fname = file.filename or "upload"
+    ext = _fname.split(".")[-1] if "." in _fname else ""
     safe_name = f"{ann_id}_{random.randint(1000, 9999)}_{file.filename}"
     file_path = os.path.join(upload_dir, safe_name)
     
@@ -942,7 +944,7 @@ def join_project(project_id: str, current_user: models.User = Depends(auth.get_c
     if current_user not in proj.members:
         proj.members.append(current_user)
         db.commit()
-        log_activity(db, project_id, current_user.name, "joined", proj.title, "member")
+        log_activity(db, project_id, cast(str, current_user.name), "joined", cast(str, proj.title), "member")
     return {"success": True}
 
 @app.post("/api/join/{join_code}")
@@ -962,7 +964,7 @@ def leave_project(project_id: str, current_user: models.User = Depends(auth.get_
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    if current_user in proj.admins and len(proj.admins) == 1 and len(proj.members) > 1:
+    if current_user in proj.admins and len(cast(list, proj.admins)) == 1 and len(cast(list, proj.members)) > 1:
         # If there are other members, you must transfer admin rights
         raise HTTPException(status_code=400, detail="You are the only admin. Transfer admin rights before leaving.")
 
@@ -979,10 +981,10 @@ def leave_project(project_id: str, current_user: models.User = Depends(auth.get_
             models.CourseGroup.group_number == proj.group_number
         ).first()
         if group:
-            members = json.loads(group.member_names) if group.member_names else []
+            members = json.loads(cast(str, group.member_names)) if group.member_names else []
             if current_user.name in members:
                 members.remove(current_user.name)
-                group.member_names = json.dumps(members)
+                group.member_names = cast(Any, json.dumps(members))
                 
                 # Fetch lecturer name to exclude from student count
                 course = db.query(models.Course).filter(models.Course.id == proj.course_id).first()
@@ -1012,7 +1014,7 @@ def log_activity(db: Session, project_id: str, actor: str, action: str, target: 
         action=action,
         target=target,
         activity_type=activity_type,
-        timestamp=datetime.utcnow().isoformat() + "Z"  # Z = UTC, prevents browser timezone shift
+        timestamp=datetime.now(timezone.utc).isoformat() + "Z"  # Z = UTC, prevents browser timezone shift
     )
     db.add(entry)
     db.commit()
@@ -1038,10 +1040,6 @@ async def upload_project_file(
 
     proj_dir = os.path.join(UPLOADS_DIR, project_id)
     os.makedirs(proj_dir, exist_ok=True)
-    dest = os.path.join(proj_dir, stored_name)
-    with open(dest, "wb") as f:
-        f.write(contents)
-
     db_file = models.ProjectFile(
         project_id=project_id,
         filename=stored_name,
@@ -1049,13 +1047,17 @@ async def upload_project_file(
         file_type=ext,
         file_size=len(contents),
         uploaded_by=current_user.name,
-        uploaded_at=datetime.utcnow().isoformat()
+        uploaded_at=datetime.now(timezone.utc).isoformat()
     )
     db.add(db_file)
     db.commit()
     db.refresh(db_file)
 
-    log_activity(db, project_id, current_user.name, "uploaded", original_name, "file")
+    dest = os.path.join(proj_dir, stored_name)
+    with open(dest, "wb") as f:
+        f.write(contents)
+
+    log_activity(db, project_id, cast(str, current_user.name), "uploaded", cast(str, original_name), "file")
 
     return {
         "id": db_file.id,
@@ -1100,10 +1102,10 @@ def download_project_file(
     ).first()
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
-    path = os.path.join(UPLOADS_DIR, project_id, db_file.filename)
+    path = os.path.join(UPLOADS_DIR, project_id, cast(str, db_file.filename))
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="File missing from storage")
-    return FileResponse(path, filename=db_file.original_name, media_type="application/octet-stream")
+    return FileResponse(path, filename=cast(str, db_file.original_name), media_type="application/octet-stream")
 
 @app.delete("/api/project/{project_id}/files/{file_id}")
 def delete_project_file(
@@ -1118,13 +1120,13 @@ def delete_project_file(
     ).first()
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
-    path = os.path.join(UPLOADS_DIR, project_id, db_file.filename)
+    path = os.path.join(UPLOADS_DIR, project_id, cast(str, db_file.filename))
     if os.path.exists(path):
         os.remove(path)
     name = db_file.original_name
     db.delete(db_file)
     db.commit()
-    log_activity(db, project_id, current_user.name, "deleted", name, "file")
+    log_activity(db, project_id, cast(str, current_user.name), "deleted", cast(str, name), "file")
     return {"success": True}
 
 @app.get("/api/project/{project_id}/activity")
@@ -1201,12 +1203,12 @@ def update_project(project_id: str, req: ProjectUpdate, current_user: models.Use
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    if req.title is not None: proj.title = req.title
-    if req.description is not None: proj.description = req.description
-    if req.courseCode is not None: proj.course_code = req.courseCode
-    if req.dueDate is not None: proj.due_date = req.dueDate
-    if req.aiTrackingEnabled is not None: proj.ai_tracking_enabled = req.aiTrackingEnabled
-    if req.minGrade is not None: proj.min_grade = req.minGrade
+    if req.title is not None: proj.title = cast(Any, req.title)
+    if req.description is not None: proj.description = cast(Any, req.description)
+    if req.courseCode is not None: proj.course_code = cast(Any, req.courseCode)
+    if req.dueDate is not None: proj.due_date = cast(Any, req.dueDate)
+    if req.aiTrackingEnabled is not None: proj.ai_tracking_enabled = cast(Any, req.aiTrackingEnabled)
+    if req.minGrade is not None: proj.min_grade = cast(Any, req.minGrade)
         
     db.commit()
     create_notification_for_others(proj, current_user, f"{current_user.name} updated project details", f"Project '{proj.title}' was updated.", "project_update", db)
@@ -1240,7 +1242,7 @@ async def generate_tasks(project_id: str, req: TaskGenerateReq, current_user: mo
         except ValueError:
             pass
 
-    new_tasks = llm_service.generate_academic_tasks(req.topic, req.context, project_duration_days)
+    new_tasks = llm_service.generate_academic_tasks(req.topic, req.context or "", project_duration_days or 14)
     
     out_tasks = []
     for t in new_tasks:
@@ -1273,7 +1275,7 @@ async def generate_tasks(project_id: str, req: TaskGenerateReq, current_user: mo
         })
     create_notification_for_others(proj, current_user, f"{current_user.name} generated AI Tasks", f"{len(new_tasks)} new tasks were generated for '{proj.title}'.", "new_message", db)
     recalculate_project_progress(project_id, db)
-    log_activity(db, project_id, current_user.name, "regenerated", f"{len(new_tasks)} AI tasks", "project")
+    log_activity(db, project_id, cast(str, current_user.name), "regenerated", f"{len(new_tasks)} AI tasks", "project")
     return {"tasks": out_tasks}
 
 # --- Descriptions & Tasks ---
@@ -1298,13 +1300,13 @@ def claim_task(task_id: str, current_user: models.User = Depends(auth.get_curren
 
     # Move to in_progress if it's still in todo
     if task.status == "todo":
-        task.status = "in_progress"
+        task.status = cast(Any, "in_progress")
 
     db.commit()
     db.refresh(task)
     create_notification_for_others(task.project, current_user, f"{current_user.name} claimed a task", f"'{task.title}' is now being worked on.", "status_change", db)
-    recalculate_project_progress(task.project_id, db)
-    log_activity(db, task.project_id, current_user.name, "claimed", task.title, "task")
+    recalculate_project_progress(cast(str, task.project_id), db)
+    log_activity(db, cast(str, task.project_id), cast(str, current_user.name), "claimed", cast(str, task.title), "task")
     return {"id": task.id, "status": task.status, "assignees": [u.name for u in task.assignees]}
 
 @app.post("/api/tasks/{task_id}/drop")
@@ -1317,13 +1319,13 @@ def drop_task(task_id: str, current_user: models.User = Depends(auth.get_current
         task.assignees.remove(current_user)
 
     # Reset to todo only when nobody is left assigned
-    if len(task.assignees) == 0 and task.status == "in_progress":
-        task.status = "todo"
+    if len(cast(list, task.assignees)) == 0 and task.status == "in_progress":
+        task.status = cast(Any, "todo")
 
     db.commit()
     db.refresh(task)
-    recalculate_project_progress(task.project_id, db)
-    log_activity(db, task.project_id, current_user.name, "dropped", task.title, "task")
+    recalculate_project_progress(cast(str, task.project_id), db)
+    log_activity(db, cast(str, task.project_id), cast(str, current_user.name), "dropped", cast(str, task.title), "task")
     return {"id": task.id, "status": task.status, "assignees": [u.name for u in task.assignees]}
 
 @app.delete("/api/tasks/{task_id}")
@@ -1335,8 +1337,8 @@ def delete_task(task_id: str, db: Session = Depends(get_db)):
     task_title = task.title
     db.delete(task)
     db.commit()
-    recalculate_project_progress(project_id, db)
-    log_activity(db, project_id, "System", "deleted", task_title, "task")
+    recalculate_project_progress(cast(str, project_id), db)
+    log_activity(db, cast(str, project_id), "System", "deleted", cast(str, task_title), "task")
     return {"success": True}
 
 @app.delete("/api/project/{project_id}/tasks")
@@ -1349,7 +1351,7 @@ def delete_all_project_tasks(project_id: str, db: Session = Depends(get_db)):
     log_activity(db, project_id, "System", "reset", "Project tasks cleared for re-generation", "project")
     db.commit()
     recalculate_project_progress(project_id, db)
-    return {"success": True, "deleted": len(proj.tasks)}
+    return {"success": True, "deleted": len(cast(list, proj.tasks))}
 
 @app.patch("/api/tasks/{task_id}")
 def update_task(task_id: str, req: TaskUpdate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
@@ -1380,19 +1382,19 @@ def update_task(task_id: str, req: TaskUpdate, current_user: models.User = Depen
         action_str = "updated task assignees"
         detail_str = f"Assignees for '{task.title}' were modified."
 
-    if req.title is not None: task.title = req.title
-    if req.description is not None: task.description = req.description
-    if req.status is not None: task.status = req.status
-    if req.priority is not None: task.priority = req.priority
-    if req.deadline is not None: task.deadline = req.deadline
+    if req.title is not None: task.title = cast(Any, req.title)
+    if req.description is not None: task.description = cast(Any, req.description)
+    if req.status is not None: task.status = cast(Any, req.status)
+    if req.priority is not None: task.priority = cast(Any, req.priority)
+    if req.deadline is not None: task.deadline = cast(Any, req.deadline)
     if req.assignees is not None:
         db_users = db.query(models.User).filter(models.User.name.in_(req.assignees)).all()
         task.assignees = db_users
         
     db.commit()
     create_notification_for_others(task.project, current_user, f"{current_user.name} {action_str}", detail_str, "status_change", db)
-    recalculate_project_progress(task.project_id, db)
-    log_activity(db, task.project_id, current_user.name, action_str.split(" ")[0] if is_status_change else "updated", task.title, "task")
+    recalculate_project_progress(cast(str, task.project_id), db)
+    log_activity(db, cast(str, task.project_id), cast(str, current_user.name), action_str.split(" ")[0] if is_status_change else "updated", cast(str, task.title), "task")
     return {"success": True}
 
 @app.post("/api/tasks/{task_id}/submit")
@@ -1406,8 +1408,8 @@ async def submit_task(task_id: str, file: UploadFile = File(...), current_user: 
     scan_result = llm_service.analyze_submission(
         file_bytes=file_bytes,
         filename=file.filename or "submission",
-        task_title=task.title,
-        task_description=task.description or ""
+        task_title=cast(str, task.title),
+        task_description=cast(str, task.description) or ""
     )
     
     ai_pct = scan_result.get("ai_percentage", -1)
@@ -1425,9 +1427,9 @@ async def submit_task(task_id: str, file: UploadFile = File(...), current_user: 
     )
     
     if not is_hard_reject:
-        task.status = "review"
-        task.has_submitted_file = True
-        task.submitted_file_name = file.filename
+        task.status = cast(Any, "review")
+        task.has_submitted_file = cast(Any, True)
+        task.submitted_file_name = cast(Any, file.filename)
         if relevance >= 0 and relevance < 75:
             recommendation = "manual_review"
     else:
@@ -1441,8 +1443,8 @@ async def submit_task(task_id: str, file: UploadFile = File(...), current_user: 
     if recommendation == "reject":
         notif_msg += " ⚠️ Rejected by AI integrity scan."
     create_notification_for_others(task.project, current_user, f"{current_user.name} submitted a file for review", notif_msg, "status_change", db)
-    recalculate_project_progress(task.project_id, db)
-    log_activity(db, task.project_id, current_user.name, "submitted", task.title, "task")
+    recalculate_project_progress(cast(str, task.project_id), db)
+    log_activity(db, cast(str, task.project_id), cast(str, current_user.name), "submitted", cast(str, task.title), "task")
     
     return {
         "success": True,
@@ -1474,7 +1476,7 @@ def breakdown_task(task_id: str, current_user: models.User = Depends(auth.get_cu
         except ValueError:
             pass
 
-    new_tasks_data = llm_service.break_down_task(task.title, task.description, task_duration_days)
+    new_tasks_data = llm_service.break_down_task(cast(str, task.title), cast(str, task.description), task_duration_days or 7)
     
     out_tasks = []
     for t in new_tasks_data:
@@ -1511,7 +1513,7 @@ def breakdown_task(task_id: str, current_user: models.User = Depends(auth.get_cu
     
     create_notification_for_others(proj, current_user, f"{current_user.name} broke down a task", f"Task '{task.title}' was broken down into {len(new_tasks_data)} subtasks.", "new_message", db)
     recalculate_project_progress(proj.id, db)
-    log_activity(db, proj.id, current_user.name, "broken_down", task.title, "task")
+    log_activity(db, cast(str, task.project_id), cast(str, current_user.name), "broke down", cast(str, task.title), "task")
     return {"tasks": out_tasks}
 
 @app.post("/api/project/{project_id}/tasks")
@@ -1537,8 +1539,8 @@ def create_task(project_id: str, req: TaskUpdate, current_user: models.User = De
     db.refresh(db_task)
     
     create_notification_for_others(proj, current_user, f"{current_user.name} created a task", f"New task '{db_task.title}' was added.", "status_change", db)
-    recalculate_project_progress(proj.id, db)
-    log_activity(db, project_id, current_user.name, "created", db_task.title, "task")
+    recalculate_project_progress(cast(str, db_task.project_id), db)
+    log_activity(db, cast(str, db_task.project_id), cast(str, current_user.name), "created", cast(str, db_task.title), "task")
     return {"success": True, "id": db_task.id}
 
 # --- Notifications ---
@@ -1564,7 +1566,7 @@ def get_notifications(current_user: models.User = Depends(auth.get_current_user)
 def mark_notifications_read(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     notifs = db.query(models.Notification).filter(models.Notification.user_id == current_user.id, models.Notification.is_read == False).all()
     for n in notifs:
-        n.is_read = True
+        n.is_read = cast(Any, True)
     db.commit()
     return {"success": True}
 
