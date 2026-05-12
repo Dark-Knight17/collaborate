@@ -6,8 +6,8 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from database import get_db
-import models
+from .database import get_db
+from . import models
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dummy_secret_key_for_academic_workflow_dev_only")
 ALGORITHM = "HS256"

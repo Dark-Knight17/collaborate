@@ -1,6 +1,6 @@
 {
-  "pythonPath": "/Users/curacel/Desktop/My Project/academic-workflow/backend/venv/bin/python",
+  "pythonPath": "academic-workflow/backend/venv/Scripts/python.exe",
   "extraPaths": [
-    "/Users/curacel/Desktop/My Project/academic-workflow/backend"
+    "academic-workflow/backend"
   ]
 }

@@ -1,6 +1,6 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Table, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Table, Text, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
-from database import Base
+from .database import Base
 import uuid
 import random
 
@@ -62,7 +62,7 @@ class Project(Base):
     title = Column(String)
     description = Column(String, default="")
     course_code = Column(String, default="")
-    due_date = Column(String, default="")
+    due_date = Column(DateTime, nullable=True)
     progress = Column(Integer, default=0)
     ai_tracking_enabled = Column(Boolean, default=False)
     min_grade = Column(Integer, default=65)
@@ -86,7 +86,7 @@ class Task(Base):
     description = Column(String, default="")
     status = Column(String, default="todo")  # todo, in_progress, review, completed
     priority = Column(String, default="medium")
-    deadline = Column(String, default="")
+    deadline = Column(DateTime, nullable=True)
     has_submitted_file = Column(Boolean, default=False)
     submitted_file_name = Column(String, default="")
     
@@ -100,7 +100,7 @@ class Notification(Base):
     type = Column(String, default="status_change")
     title = Column(String)
     description = Column(String, default="")
-    timestamp = Column(String, default="")
+    timestamp = Column(DateTime, nullable=True)
     is_read = Column(Boolean, default=False)
     link = Column(String, default="")
     project_id = Column(String, nullable=True)
@@ -144,7 +144,7 @@ class Announcement(Base):
     lecturer_id = Column(String, ForeignKey("users.id"))
     title = Column(String)
     body = Column(Text, default="")
-    timestamp = Column(String, default="")
+    timestamp = Column(DateTime, nullable=True)
     has_group_assignment = Column(Boolean, default=False)
     
     files = relationship("AnnouncementFile", back_populates="announcement", cascade="all, delete-orphan")
@@ -158,7 +158,7 @@ class AnnouncementFile(Base):
     original_name = Column(String)
     file_type = Column(String, default="")   # extension e.g. "pdf"
     file_size = Column(Integer, default=0)   # bytes
-    uploaded_at = Column(String, default="") # ISO timestamp
+    uploaded_at = Column(DateTime, nullable=True)
 
     announcement = relationship("Announcement", back_populates="files")
 
@@ -171,7 +171,7 @@ class ProjectFile(Base):
     file_type = Column(String, default="")   # extension e.g. "pdf"
     file_size = Column(Integer, default=0)   # bytes
     uploaded_by = Column(String, default="") # user name
-    uploaded_at = Column(String, default="") # ISO timestamp
+    uploaded_at = Column(DateTime, nullable=True)
 
     project = relationship("Project", back_populates="files")
 
@@ -183,7 +183,7 @@ class ProjectActivity(Base):
     action = Column(String, default="")      # e.g. "completed", "uploaded"
     target = Column(String, default="")      # e.g. task title or file name
     activity_type = Column(String, default="task") # "task" | "file" | "member"
-    timestamp = Column(String, default="")
+    timestamp = Column(DateTime, nullable=True)
 
     project = relationship("Project", back_populates="activity")
 
@@ -192,4 +192,4 @@ class PasswordResetToken(Base):
     id = Column(String, primary_key=True, default=gen_id)
     user_id = Column(String, ForeignKey("users.id"))
     token = Column(String, unique=True, index=True)
-    expires_at = Column(String)  # ISO timestamp string
+    expires_at = Column(DateTime, nullable=True)
