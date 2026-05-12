@@ -3,7 +3,7 @@ import axios from 'axios';
 // Production (Vercel): set VITE_API_URL in the Vercel dashboard to your Railway/Render backend URL.
 // e.g. https://collaborate-backend.railway.app/api
 // Development: falls back to localhost:8000 automatically.
-const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000/api`;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 
 // Add JWT Token to all outbound requests
@@ -20,7 +20,7 @@ export const api = {
     const params = new URLSearchParams();
     params.append('username', formData.email);
     params.append('password', formData.password);
-    
+
     const res = await axios.post(`${API_BASE_URL}/login`, params, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
@@ -46,7 +46,7 @@ export const api = {
     const res = await axios.get(`${API_BASE_URL}/me`);
     return res.data;
   },
-  
+
   updateProfile: async (updates: { name?: string; email?: string }) => {
     const res = await axios.patch(`${API_BASE_URL}/me`, updates);
     return res.data;
@@ -69,7 +69,7 @@ export const api = {
     });
     return res.data;
   },
-  
+
   getProjects: async () => {
     const res = await axios.get(`${API_BASE_URL}/projects`);
     return res.data;
@@ -84,7 +84,7 @@ export const api = {
     const res = await axios.get(`${API_BASE_URL}/project/${projectId}`);
     return res.data;
   },
-  
+
   updateProject: async (projectId: string, updates: any) => {
     const res = await axios.patch(`${API_BASE_URL}/project/${projectId}`, updates);
     return res.data;
@@ -94,22 +94,22 @@ export const api = {
     const res = await axios.post(`${API_BASE_URL}/join/${code}`);
     return res.data;
   },
-  
+
   deleteProject: async (projectId: string) => {
     const res = await axios.delete(`${API_BASE_URL}/project/${projectId}`);
     return res.data;
   },
-  
+
   generateTasks: async (projectId: string, topic: string, context: string = '') => {
     const res = await axios.post(`${API_BASE_URL}/project/${projectId}/generate-tasks`, { topic, context });
     return res.data;
   },
-  
+
   generateDescription: async (description: string) => {
     const res = await axios.post(`${API_BASE_URL}/generate-description`, { description });
     return res.data;
   },
-  
+
   leaveProject: async (projectId: string) => {
     const res = await axios.delete(`${API_BASE_URL}/project/${projectId}/leave`);
     return res.data;
@@ -119,12 +119,12 @@ export const api = {
     const res = await axios.post(`${API_BASE_URL}/project/${projectId}/join`);
     return res.data;
   },
-  
+
   breakDownTask: async (taskId: string) => {
     const res = await axios.post(`${API_BASE_URL}/tasks/${taskId}/breakdown`);
     return res.data;
   },
-  
+
   claimTask: async (taskId: string) => {
     const res = await axios.post(`${API_BASE_URL}/tasks/${taskId}/claim`);
     return res.data;
@@ -134,12 +134,12 @@ export const api = {
     const res = await axios.post(`${API_BASE_URL}/tasks/${taskId}/drop`);
     return res.data;
   },
-  
+
   updateTask: async (taskId: string, updates: any) => {
     const res = await axios.patch(`${API_BASE_URL}/tasks/${taskId}`, updates);
     return res.data;
   },
-  
+
   deleteTask: async (taskId: string) => {
     const res = await axios.delete(`${API_BASE_URL}/tasks/${taskId}`);
     return res.data;
