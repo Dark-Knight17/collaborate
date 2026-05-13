@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import type {
   Task,
   TaskStatus,
@@ -18,6 +18,7 @@ import { useNotifications } from './NotificationContext';
 export type {
   Task,
   TaskStatus,
+  TaskPriority,
   Project,
   User,
   Message,
