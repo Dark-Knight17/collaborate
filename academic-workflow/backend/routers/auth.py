@@ -106,7 +106,7 @@ def reset_password(req: ResetPasswordReq, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
 
     # Check expiry
-    if record.expires_at and datetime.now(timezone.utc) > record.expires_at.replace(tzinfo=timezone.utc):
+    if record.expires_at and datetime.now(timezone.utc).replace(tzinfo=None) > record.expires_at:
         db.delete(record)
         db.commit()
         raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
