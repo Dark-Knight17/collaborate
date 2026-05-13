@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Settings, Bell, LogOut, BookOpen, Megaphone, MessageSquare, ChevronDown, Search, GraduationCap, Users, Menu, X } from 'lucide-react';
 import { useMockData } from '../context/MockDataContext';
+import { getAvatarUrl } from '../api/config';
 
 export const LecturerLayout: React.FC = () => {
   const { user, isLoadingAuth, logout, notifications, markNotificationsAsRead } = useMockData();
@@ -278,7 +279,7 @@ export const LecturerLayout: React.FC = () => {
                 className="sidebar-link"
               >
                 <img
-                  src={user.avatarUrl}
+                  src={getAvatarUrl(user.avatarUrl)}
                   alt="User"
                   style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--border-color)' }}
                 />

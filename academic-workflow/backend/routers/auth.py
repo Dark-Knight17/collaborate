@@ -147,9 +147,7 @@ def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
         "role": current_user.role
     }
 
-@router.patch("/api/me") # Note: main.py had /api/me here too, but prefix is /api. Wait, prefix is /api.
-# If I have prefix /api, then @router.get("/me") becomes /api/me.
-# But main.py had @app.patch("/api/me"). If I use @router.patch("/me"), it becomes /api/me.
+@router.patch("/me")
 def update_me(req: dict, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     if "name" in req:
         current_user.name = req["name"]

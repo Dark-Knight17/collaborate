@@ -1,6 +1,7 @@
 import React from 'react';
 import { useMockData } from '../../context/MockDataContext';
 import { Moon, Sun, Bell, BellOff, GraduationCap, Mail } from 'lucide-react';
+import { getAvatarUrl } from '../../api/config';
 
 export const LecturerSettings: React.FC = () => {
   const { user, toggleTheme, updateUserPreferences } = useMockData();
@@ -17,7 +18,7 @@ export const LecturerSettings: React.FC = () => {
       <div className="card" style={{ padding: '1.5rem', marginBottom: '1.25rem' }}>
         <div style={{ fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>Profile</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <img src={user.avatarUrl} alt="Avatar" style={{ width: '64px', height: '64px', borderRadius: '50%', border: '3px solid color-mix(in srgb, var(--theme-color) 30%, transparent)' }} />
+          <img src={getAvatarUrl(user.avatarUrl)} alt="Avatar" style={{ width: '64px', height: '64px', borderRadius: '50%', border: '3px solid color-mix(in srgb, var(--theme-color) 30%, transparent)' }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{user.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '3px' }}>

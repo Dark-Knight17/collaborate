@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, Settings, Bell, Search, LogOut, MessageSquare, Plus, Layers, Folder, ChevronDown, BookOpen, Megaphone, Menu, X } from 'lucide-react';
 import { useMockData } from '../context/MockDataContext';
 import { CreateProjectModal } from '../components/CreateProjectModal';
+import { getAvatarUrl } from '../api/config';
 
 export const DashboardLayout: React.FC = () => {
   const { user, projects, isLoadingAuth, logout, notifications, markNotificationsAsRead } = useMockData();
@@ -295,7 +296,7 @@ export const DashboardLayout: React.FC = () => {
                 }}
                 className="sidebar-link"
               >
-                <img src={user.avatarUrl} alt="User" style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--border-color)' }} />
+                <img src={getAvatarUrl(user.avatarUrl)} alt="User" style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--border-color)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{user.name}</span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Account</span>

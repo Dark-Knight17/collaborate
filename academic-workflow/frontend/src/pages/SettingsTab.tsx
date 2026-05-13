@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useMockData } from '../context/MockDataContext';
 import { Camera, LogOut, Trash2 } from 'lucide-react';
 import { api } from '../api';
+import { getAvatarUrl } from '../api/config';
 
 const ToggleSwitch = ({ checked, onChange }: { checked: boolean, onChange: () => void }) => (
   <div 
@@ -116,7 +117,7 @@ export const SettingsTab: React.FC = () => {
             <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '1rem' : '2rem', marginBottom: isMobile ? '1rem' : '2rem', flexDirection: isMobile ? 'column' : 'row' }}>
             <div style={{ position: 'relative' }}>
               <img 
-                src={user.avatarUrl} 
+                src={getAvatarUrl(user.avatarUrl)} 
                 alt="Profile" 
                 style={{ width: isMobile ? '80px' : '100px', height: isMobile ? '80px' : '100px', borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--border-color)', opacity: avatarLoading ? 0.5 : 1 }} 
               />

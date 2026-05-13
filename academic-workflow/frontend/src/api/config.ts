@@ -13,6 +13,18 @@ export const ROOT_URL = API_BASE_URL.replace(/\/api$/, '');
 // If API_BASE_URL is http://localhost:8000/api -> ws://localhost:8000/api
 export const WS_BASE_URL = API_BASE_URL.replace(/^http/, 'ws');
 
+/**
+ * Resolves a user avatar URL.
+ * If it's a relative path starting with /uploads, it prefixes it with ROOT_URL.
+ */
+export const getAvatarUrl = (url?: string) => {
+  if (!url) return 'https://i.pravatar.cc/150';
+  if (url.startsWith('/uploads')) {
+    return `${ROOT_URL}${url}`;
+  }
+  return url;
+};
+
 // Add JWT Token to all outbound requests
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
