@@ -36,19 +36,28 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     let ws: WebSocket;
     const connectWs = () => {
-      // WS_BASE_URL is e.g. "wss://backend.com/api" or "ws://localhost:8000/api"
-      ws = new WebSocket(`${WS_BASE_URL}/ws/notifications/${user.id}`);
-      ws.onmessage = (event) => {
-        try {
-          const newNotif = JSON.parse(event.data);
-          setNotifications(prev => [newNotif, ...prev]);
-        } catch (e) {
-          console.error("WS parse error", e);
-        }
-      };
-      ws.onclose = () => {
-        setTimeout(connectWs, 3000);
-      };
+      try {
+        // WS_BASE_URL is e.g. "wss://backend.com/api" or "ws://localhost:8000/api"
+        ws = new WebSocket(`${WS_BASE_URL}/ws/notifications/${user.id}`);
+        ws.onmessage = (event) => {
+          try {
+            const newNotif = JSON.parse(event.data);
+            setNotifications(prev => [newNotif, ...prev]);
+          } catch (e) {
+            console.error("WS parse error", e);
+          }
+        };
+        ws.onclose = () => {
+          setTimeout(connectWs, 3000);
+        };
+        ws.onerror = (e) => {
+          console.error("WebSocket error:", e);
+          ws.close();
+        };
+      } catch (err) {
+        console.error("Failed to establish WebSocket connection:", err);
+        // Fallback: the 30s polling in useEffect will still work
+      }
     };
     connectWs();
 
