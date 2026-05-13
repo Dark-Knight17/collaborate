@@ -4,6 +4,7 @@ import type { Announcement, Course } from '../context/MockDataContext';
 import { BookOpen, Layers, Clock, RefreshCw, FileText, ExternalLink, ChevronDown } from 'lucide-react';
 import { CreateProjectModal } from '../components/CreateProjectModal';
 import { useNavigate } from 'react-router-dom';
+import { ROOT_URL } from '../api/config';
 
 const timeAgo = (ts: string) => {
   const diff = Date.now() - new Date(ts).getTime();
@@ -205,7 +206,7 @@ const AnnouncementCard: React.FC<{ ann: Announcement; course: Course }> = ({ ann
               <span style={{ fontWeight: 500, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.originalName}</span>
               <div style={{ display: 'flex', gap: '0.4rem', marginLeft: '0.4rem' }}>
                 <a 
-                  href={`http://localhost:8000/uploads/announcements/${f.filename}`} 
+                  href={`${ROOT_URL}/uploads/announcements/${f.filename}`} 
                   target="_blank" 
                   rel="noreferrer"
                   className="btn-icon"

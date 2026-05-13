@@ -5,6 +5,9 @@ import axios from 'axios';
 // Development: falls back to localhost:8000 automatically.
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
+// Base URL without the /api suffix (for static files/uploads)
+export const ROOT_URL = API_BASE_URL.replace(/\/api$/, '');
+
 // Derive WebSocket URL from API_BASE_URL
 // If API_BASE_URL is https://backend.com/api -> wss://backend.com/api
 // If API_BASE_URL is http://localhost:8000/api -> ws://localhost:8000/api

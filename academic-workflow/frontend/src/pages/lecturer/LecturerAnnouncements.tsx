@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useMockData } from '../../context/MockDataContext';
 import type { Announcement } from '../../context/MockDataContext';
+import { ROOT_URL } from '../../api/config';
 import { Megaphone, Plus, X, Users, Trash2, BookOpen, ChevronRight, Clock, Layers, Paperclip, FileText, ExternalLink } from 'lucide-react';
 
 // ─── Post Announcement Modal ──────────────────────────────────────────────────
@@ -225,7 +226,7 @@ const AnnouncementCard: React.FC<{ ann: Announcement; now: number; onDelete: () 
               <span style={{ fontWeight: 500, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.originalName}</span>
               <div style={{ display: 'flex', gap: '0.4rem', marginLeft: '0.4rem' }}>
                 <a 
-                  href={`http://localhost:8000/uploads/announcements/${f.filename}`} 
+                  href={`${ROOT_URL}/uploads/announcements/${f.filename}`} 
                   target="_blank" 
                   rel="noreferrer"
                   className="btn-icon"

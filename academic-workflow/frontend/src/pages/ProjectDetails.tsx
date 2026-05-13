@@ -9,6 +9,7 @@ import {
   LayoutGrid, List as ListIcon, CalendarDays, Clock, ChevronLeft, ChevronRight, Share2, Copy, Mail, MessageCircle, Send, X, MoreVertical, Trash2, Check
 } from 'lucide-react';
 import { api } from '../api';
+import { API_BASE_URL } from '../api/config';
 import TaskDetails from '../components/TaskDetails';
 import { EditProjectModal } from '../components/EditProjectModal';
 import { HydrateBlueprintModal } from '../components/HydrateBlueprintModal';
@@ -1000,7 +1001,7 @@ Team Size: ${formData.collaborationStyle || 'Not provided'}
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
                               <a
-                                href={`http://localhost:8000/api/project/${id}/files/${f.id}/download`}
+                                href={`${API_BASE_URL}/project/${id}/files/${f.id}/download`}
                                 target="_blank"
                                 rel="noreferrer"
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.7rem', borderRadius: '8px', background: 'color-mix(in srgb, var(--theme-color) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--theme-color) 20%, transparent)', color: 'var(--theme-color)', fontSize: '0.75rem', fontWeight: 600, textDecoration: 'none', cursor: 'pointer' }}
