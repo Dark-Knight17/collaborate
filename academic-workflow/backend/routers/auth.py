@@ -79,7 +79,7 @@ def forgot_password(req: ForgotPasswordReq, db: Session = Depends(get_db)):
 
     # Generate a new 32-char hex token
     raw_token = _uuid.uuid4().hex + _uuid.uuid4().hex[:8]  # 40-char hex
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=30)
 
     reset_record = models.PasswordResetToken(
         user_id=user.id,
@@ -98,15 +98,21 @@ def forgot_password(req: ForgotPasswordReq, db: Session = Depends(get_db)):
 
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordReq, db: Session = Depends(get_db)):
+    print(f"DEBUG: Reset password attempt with token: {req.token[:10]}...")
     record = db.query(models.PasswordResetToken).filter(
         models.PasswordResetToken.token == req.token
     ).first()
 
     if not record:
+        print("DEBUG: Token not found in database.")
         raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
 
     # Check expiry
-    if record.expires_at and datetime.now(timezone.utc).replace(tzinfo=None) > record.expires_at:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    print(f"DEBUG: Token found. Expiry: {record.expires_at}, Current Time (UTC): {now}")
+    
+    if record.expires_at and now > record.expires_at:
+        print("DEBUG: Token has expired.")
         db.delete(record)
         db.commit()
         raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
