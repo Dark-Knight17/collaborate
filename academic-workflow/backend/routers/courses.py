@@ -7,9 +7,9 @@ import os
 import shutil
 from datetime import datetime
 
-from ..database import get_db
-from .. import models, auth
-from ..schemas import CourseCreate, CourseGroupCreate, AnnouncementCreate
+from database import get_db
+import models, auth
+from schemas import CourseCreate, CourseGroupCreate, AnnouncementCreate
 
 router = APIRouter(prefix="/api", tags=["courses"])
 

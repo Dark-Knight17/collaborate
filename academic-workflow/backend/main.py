@@ -3,8 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-from .database import engine, Base
-from .routers import auth, courses, projects, tasks, misc
+from database import engine, Base
+from routers import auth, courses, projects, tasks, misc
 
 # Create Tables
 Base.metadata.create_all(bind=engine)

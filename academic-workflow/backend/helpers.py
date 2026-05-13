@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime, timezone
 import asyncio
-from . import models
+import models
 
 class ConnectionManager:
     def __init__(self):

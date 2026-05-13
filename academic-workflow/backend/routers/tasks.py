@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from typing import List, cast, Any
 from datetime import datetime, timedelta
 
-from ..database import get_db
-from .. import models, auth, llm_service
-from ..schemas import TaskUpdate, DescriptionReq, TaskGenerateReq
-from ..helpers import log_activity, create_notification_for_others, recalculate_project_progress
+from database import get_db
+import models, auth, llm_service
+from schemas import TaskUpdate, DescriptionReq, TaskGenerateReq
+from helpers import log_activity, create_notification_for_others, recalculate_project_progress
 
 router = APIRouter(prefix="/api", tags=["tasks"])
 

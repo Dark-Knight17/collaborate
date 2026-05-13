@@ -7,10 +7,10 @@ import json
 import os
 from datetime import datetime, timezone
 
-from ..database import get_db
-from .. import models, auth
-from ..schemas import ProjectCreate, ProjectUpdate
-from ..helpers import log_activity, create_notification_for_others
+from database import get_db
+import models, auth
+from schemas import ProjectCreate, ProjectUpdate
+from helpers import log_activity, create_notification_for_others
 
 router = APIRouter(prefix="/api", tags=["projects"])
 
@@ -238,7 +238,7 @@ async def upload_project_file(
     contents = await file.read()
     original_name = file.filename or "upload"
     ext = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
-    from ..models import gen_id
+    from models import gen_id
     stored_name = f"{gen_id()}_{original_name}"
 
     proj_dir = os.path.join(UPLOADS_DIR, project_id)

@@ -5,10 +5,10 @@ from datetime import timedelta, datetime, timezone
 import os
 import time
 
-from ..database import get_db
-from .. import models, auth
-from ..schemas import UserCreate, UserResponse, ForgotPasswordReq, ResetPasswordReq
-from ..helpers import manager
+from database import get_db
+import models, auth
+from schemas import UserCreate, UserResponse, ForgotPasswordReq, ResetPasswordReq
+from helpers import manager
 
 router = APIRouter(prefix="/api", tags=["authentication"])
 

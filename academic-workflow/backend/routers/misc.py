@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from typing import cast
 from datetime import datetime, timezone
 
-from ..database import get_db
-from .. import models, auth, llm_service
-from ..schemas import DescriptionReq
-from ..helpers import manager
+from database import get_db
+import models, auth, llm_service
+from schemas import DescriptionReq
+from helpers import manager
 
 router = APIRouter(prefix="/api", tags=["misc"])
 

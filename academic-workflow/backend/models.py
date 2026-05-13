@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Table, Text, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
-from .database import Base
+from database import Base
 import uuid
 import random
 
