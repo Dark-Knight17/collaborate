@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../api';
+import { WS_BASE_URL } from '../api/config';
 import type { Notification } from '../appTypes';
 import { useAuth } from './AuthContext';
 
@@ -34,9 +35,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const interval = setInterval(fetchNotifs, 30000); // Less frequent polling since we have WS
 
     let ws: WebSocket;
-    const wsHost = `${window.location.hostname}:8000`;
     const connectWs = () => {
-      ws = new WebSocket(`ws://${wsHost}/api/ws/notifications/${user.id}`);
+      // WS_BASE_URL is e.g. "wss://backend.com/api" or "ws://localhost:8000/api"
+      ws = new WebSocket(`${WS_BASE_URL}/ws/notifications/${user.id}`);
       ws.onmessage = (event) => {
         try {
           const newNotif = JSON.parse(event.data);
