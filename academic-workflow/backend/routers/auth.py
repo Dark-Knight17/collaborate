@@ -98,21 +98,27 @@ def forgot_password(req: ForgotPasswordReq, db: Session = Depends(get_db)):
 
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordReq, db: Session = Depends(get_db)):
-    print(f"DEBUG: Reset password attempt with token: {req.token[:10]}...")
     record = db.query(models.PasswordResetToken).filter(
         models.PasswordResetToken.token == req.token
     ).first()
 
     if not record:
-        print("DEBUG: Token not found in database.")
         raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
 
     # Check expiry
+    # SQLite might return the timestamp as a string; ensure it's a datetime object
+    expires_at = record.expires_at
+    if isinstance(expires_at, str):
+        try:
+            # Common format: '2026-05-13 17:24:40.303719'
+            expires_at = datetime.fromisoformat(expires_at)
+        except ValueError:
+            # Fallback for other formats if necessary
+            pass
+
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    print(f"DEBUG: Token found. Expiry: {record.expires_at}, Current Time (UTC): {now}")
     
-    if record.expires_at and now > record.expires_at:
-        print("DEBUG: Token has expired.")
+    if expires_at and now > expires_at:
         db.delete(record)
         db.commit()
         raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
